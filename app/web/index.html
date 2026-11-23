@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>实验板空间效应分析</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>实验板空间效应分析</h1>
+    <div class="sub">行列 / 边缘 / 处理效应联合估计 · 显式参数模型 · 坏孔只标记不删除 · 分析快照不可变</div>
+  </div>
+  <div class="spacer"></div>
+  <label class="inline">主题
+    <select id="theme-select"><option value="light">浅色</option><option value="dark">深色</option></select>
+  </label>
+</header>
+
+<main>
+  <!-- 数据导入与板管理 -->
+  <section class="card">
+    <h2>1. 数据导入（全部为虚构合成数据）与板角色</h2>
+    <div class="row-flex">
+      <div class="col">
+        <div class="pill-row">
+          <button class="primary" id="btn-import-all">导入全部三个场景</button>
+          <button data-scenario="A_random">导入 A：随机布局</button>
+          <button data-scenario="B_row_confounded">导入 B：整行同处理</button>
+          <button data-scenario="C_edge_missing">导入 C：边缘对照缺失</button>
+        </div>
+        <p class="small muted" style="margin-top:10px">
+          板角色（校准 / 独立验证）在导入时固定，之后不可修改。重复导入同一块板会被拒绝。
+        </p>
+      </div>
+      <div class="col">
+        <table id="plate-table">
+          <thead><tr><th>板ID</th><th>角色</th><th>场景</th><th class="num">孔数</th><th>导入序号</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 分析配置 -->
+  <section class="card">
+    <h2>2. 分析配置（板集合与坏孔阈值在创建时冻结）</h2>
+    <div class="row-flex">
+      <div class="col">
+        <label class="small muted">参与分析的板（按住 Ctrl 多选；不选则使用全部板）</label><br>
+        <select id="plate-picker" multiple size="5"></select>
+      </div>
+      <div class="col">
+        <label class="inline">坏孔建议阈值 k（|标准化残差| &gt; k）
+          <input type="number" id="bad-k" value="4" min="2" max="8" step="0.5" style="width:90px">
+        </label>
+        <div class="pill-row">
+          <button class="primary" id="btn-run">创建分析快照</button>
+        </div>
+        <p class="small muted" id="append-note" style="margin-top:8px"></p>
+      </div>
+      <div class="col">
+        <label class="small muted">历史分析版本（不可变）</label>
+        <ul class="timeline" id="analysis-timeline"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 标签页 -->
+  <div class="tabs">
+    <button class="active" data-tab="design">设计诊断</button>
+    <button data-tab="plate">板面图</button>
+    <button data-tab="residual">残差图</button>
+    <button data-tab="badwell">坏孔复核</button>
+    <button data-tab="treat">逐处理对比</button>
+  </div>
+
+  <section class="tabpane active" id="tab-design">
+    <div class="metrics" id="design-metrics"></div>
+    <div class="card">
+      <h2>可识别性与混杂诊断（基于设计矩阵 SVD 零空间）</h2>
+      <div id="design-alerts"></div>
+      <table id="diagnostic-table">
+        <thead><tr><th>类型</th><th>诊断说明</th><th>涉及的不可识别参数</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>方法选择理由与独立验证结论（随快照冻结）</h2>
+      <div id="method-reasons"></div>
+      <div id="validation-box"></div>
+    </div>
+  </section>
+
+  <section class="tabpane" id="tab-plate">
+    <div class="card">
+      <h2>板面图</h2>
+      <div class="pill-row" style="margin-bottom:12px">
+        <label class="inline">板
+          <select id="plate-view-picker"></select>
+        </label>
+        <label class="inline">颜色编码
+          <select id="plate-metric">
+            <option value="response">原始响应</option>
+            <option value="fitted">拟合值</option>
+            <option value="residual">残差</option>
+            <option value="rstd">标准化残差</option>
+          </select>
+        </label>
+      </div>
+      <div id="plate-view"></div>
+      <div class="legend" id="plate-legend"></div>
+      <p class="small muted" style="margin-top:8px">
+        品红描边＝边缘孔；斜纹＝被标记坏孔（原记录仍保留，仅不参与拟合）；点孔可查看详情并翻转标记。
+      </p>
+    </div>
+  </section>
+
+  <section class="tabpane" id="tab-residual">
+    <div class="card">
+      <h2>残差-拟合值散点</h2>
+      <div id="resid-scatter"></div>
+    </div>
+    <div class="row-flex">
+      <div class="card col">
+        <h2>逐行残差中位数</h2>
+        <div id="row-resid"></div>
+        <p class="small muted">按分析内全部板汇总（同行名跨板合并）。</p>
+      </div>
+      <div class="card col">
+        <h2>逐列残差中位数</h2>
+        <div id="col-resid"></div>
+        <p class="small muted">按分析内全部板汇总（同列号跨板合并）。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabpane" id="tab-badwell">
+    <div class="card">
+      <h2>坏孔复核（原始记录不删除；翻转标记生成新分析版本）</h2>
+      <div id="badwell-summary"></div>
+      <table id="badwell-table">
+        <thead><tr><th>板</th><th>孔位</th><th>处理</th><th class="num">响应</th>
+          <th class="num">标准化残差</th><th>建议坏孔</th><th>当前状态</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3>版本影响对比（当前版本 vs 父版本）</h3>
+      <div id="version-diff"></div>
+    </div>
+  </section>
+
+  <section class="tabpane" id="tab-treat">
+    <div class="card">
+      <h2>逐处理效应与 95% 置信区间</h2>
+      <div id="treat-plot"></div>
+      <p class="small muted">不可估的处理对比不绘制数值，仅列出混杂原因——平滑方法不会被用来"补出"这些效应。</p>
+    </div>
+    <div class="card">
+      <h2>处理对比明细表</h2>
+      <table id="treat-table">
+        <thead><tr><th>对比</th><th>状态</th><th class="num">估计</th><th class="num">SE</th>
+          <th class="num">95% CI 下限</th><th class="num">95% CI 上限</th><th>说明</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>中位数抛光交叉核对（不分离边缘效应，仅参考）</h2>
+      <table id="mp-table">
+        <thead><tr><th>对比</th><th class="num">估计</th><th class="num">SE</th><th>参与板数</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+<div id="well-popover"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

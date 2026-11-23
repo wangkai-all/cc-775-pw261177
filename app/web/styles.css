@@ -1,0 +1,186 @@
+/* 实验板空间效应分析 — 本地界面，离线无 CDN。色值取自 dataviz 校验过的参考色板。 */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --blue: #2a78d6;
+  --orange: #eb6834;
+  --aqua: #1baf7a;
+  --yellow: #eda100;
+  --magenta: #e87ba4;
+  --green: #008300;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --seq-1: #cde2fb; --seq-2: #86b6ef; --seq-3: #5598e7;
+  --seq-4: #2a78d6; --seq-5: #1c5cab; --seq-6: #104281; --seq-7: #0d366b;
+  --treat-ctrl: #898781;
+  --treat-t1: #2a78d6; --treat-t2: #eb6834; --treat-t3: #1baf7a;
+  --treat-t4: #eda100; --treat-t5: #e87ba4;
+  --diverge-neg: #d03b3b;
+  --diverge-mid: #f0efec;
+  --diverge-pos: #2a78d6;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --blue: #3987e5; --orange: #d95926; --aqua: #199e70;
+  --yellow: #c98500; --magenta: #d55181;
+  --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #256abf;
+  --seq-4: #3987e5; --seq-5: #86b6ef; --seq-6: #cde2fb; --seq-7: #e3eefc;
+  --treat-ctrl: #a8a69f;
+  --treat-t1: #3987e5; --treat-t2: #d95926; --treat-t3: #199e70;
+  --treat-t4: #c98500; --treat-t5: #d55181;
+  --diverge-neg: #e66767;
+  --diverge-mid: #383835;
+  --diverge-pos: #3987e5;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header {
+  padding: 14px 22px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+header .sub { color: var(--ink-2); font-size: 12.5px; }
+.spacer { flex: 1; }
+
+main { padding: 18px 22px 60px; max-width: 1280px; margin: 0 auto; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 16px;
+}
+.card h2 { font-size: 14.5px; margin: 0 0 12px; font-weight: 650; }
+.card h3 { font-size: 13.5px; margin: 16px 0 8px; color: var(--ink-2); }
+
+button, select, input[type="number"] {
+  font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--axis);
+  border-radius: 7px; padding: 6px 12px; cursor: pointer;
+}
+button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+button.ghost { background: transparent; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+select[multiple] { min-width: 220px; min-height: 150px; }
+label.inline { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tabs button {
+  border-radius: 8px 8px 0 0; border-bottom: none; padding: 9px 16px;
+  color: var(--ink-2);
+}
+.tabs button.active { color: var(--ink); background: var(--surface); font-weight: 650; }
+.tabpane { display: none; }
+.tabpane.active { display: block; }
+
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 600; font-size: 12.5px; }
+td.num, th.num { text-align: right; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid var(--border);
+}
+.badge.good { color: var(--good); border-color: var(--good); }
+.badge.warn { color: #9a6b00; border-color: var(--warning); }
+.badge.crit { color: var(--critical); border-color: var(--critical); }
+.badge.neutral { color: var(--ink-2); }
+:root[data-theme="dark"] .badge.warn { color: var(--warning); }
+
+.row-flex { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.col { flex: 1 1 0; min-width: 280px; }
+
+.alert {
+  border-left: 4px solid var(--critical); background: color-mix(in srgb, var(--critical) 9%, transparent);
+  padding: 10px 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px;
+}
+.alert.warnbox { border-left-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 12%, transparent); }
+.alert.infobox { border-left-color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 9%, transparent); }
+.alert b { display: block; margin-bottom: 3px; }
+
+/* ---- 板面热力图 ---- */
+.plate-grid { display: flex; flex-direction: column; gap: 3px; }
+.plate-row { display: flex; gap: 3px; align-items: center; }
+.axis-label { width: 22px; text-align: center; color: var(--muted); font-size: 12px; }
+.cell {
+  width: 44px; height: 40px; border-radius: 5px; position: relative;
+  border: 1px solid var(--border); cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.cell.edge-cell { box-shadow: inset 0 0 0 2px var(--magenta); }
+.cell.bad-cell::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent 0 5px,
+    color-mix(in srgb, var(--critical) 55%, transparent) 5px 7px);
+}
+.cell.excluded { outline: 2px dashed var(--critical); outline-offset: 1px; }
+.cell:hover { outline: 2px solid var(--ink); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px;
+  color: var(--ink-2); font-size: 12.5px; align-items: center; }
+.legend .swatch { width: 14px; height: 14px; border-radius: 3px;
+  display: inline-block; vertical-align: -2px; margin-right: 5px;
+  border: 1px solid var(--border); }
+
+.treat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  margin-right: 5px; vertical-align: -1px; }
+
+/* ---- 散点/区间图 ---- */
+svg text { fill: var(--ink-2); font-size: 11.5px; }
+svg .axis-line { stroke: var(--axis); stroke-width: 1; }
+svg .gridline { stroke: var(--grid); stroke-width: 1; }
+svg .zero-line { stroke: var(--ink-2); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.tooltip {
+  position: fixed; pointer-events: none; z-index: 30; display: none;
+  background: var(--surface); border: 1px solid var(--axis); border-radius: 8px;
+  padding: 8px 11px; font-size: 12.5px; box-shadow: 0 6px 22px rgba(0,0,0,.18);
+  max-width: 280px;
+}
+.tooltip b { color: var(--ink); }
+
+#well-popover {
+  position: fixed; z-index: 40; display: none; width: 300px;
+  background: var(--surface); border: 1px solid var(--axis); border-radius: 10px;
+  padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.22);
+}
+#well-popover table { font-size: 12.5px; }
+.pill-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.metric-tile {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; min-width: 130px;
+}
+.metric-tile .v { font-size: 22px; font-weight: 650; }
+.metric-tile .l { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+.metrics { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.timeline { list-style: none; padding: 0; margin: 0; }
+.timeline li { padding: 8px 12px; border-left: 3px solid var(--axis); margin-bottom: 6px;
+  cursor: pointer; border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--grid) 35%, transparent); }
+.timeline li.current { border-left-color: var(--blue); font-weight: 600; }
+.diff-add { color: var(--good); }
+.diff-del { color: var(--critical); }
+.kbd { font-family: ui-monospace, monospace; background: var(--grid); border-radius: 4px;
+  padding: 1px 6px; font-size: 12px; }
